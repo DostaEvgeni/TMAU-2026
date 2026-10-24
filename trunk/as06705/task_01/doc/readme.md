@@ -69,53 +69,6 @@ $$\frac{dy}{dt} = -a \cdot y + b + u \quad\Rightarrow\quad y_{\tau+1} = y_{\tau}
 экспортируются в CSV (`Runner::dumpCsv`) и визуализируются через внешний
 Python-скрипт `render_plot.py` (matplotlib).
 
-## Результаты моделирования
-
-Все расчёты выполнены при $n = 20$ шагах и амплитуде входа $A = 1$.
-Параметры моделей — значения по умолчанию.
-
-### 1. Model 1.6 — линейная модель третьего порядка
-
-**Ступенчатое воздействие** ($u_\tau = 1$):
-
-![Model 1.6 step](out_model16_step.png)
-
-**Импульсное воздействие** ($u_0 = 1$, $u_{\tau>0} = 0$):
-
-![Model 1.6 impulse](out_model16_impulse.png)
-
-**Гармоническое воздействие** ($u_\tau = \sin\tau$):
-
-![Model 1.6 harmonic](out_model16_harmonic.png)
-
-### 2. Model 2.8 — нелинейная модель с логистическим отображением
-
-**Ступенчатое воздействие:**
-
-![Model 2.8 step](out_model28_step.png)
-
-**Импульсное воздействие:**
-
-![Model 2.8 impulse](out_model28_impulse.png)
-
-**Гармоническое воздействие:**
-
-![Model 2.8 harmonic](out_model28_harmonic.png)
-
-### 3. Model 3.10 — дифференциальное уравнение (метод Эйлера)
-
-**Ступенчатое воздействие:**
-
-![Model 3.10 step](out_model310_step.png)
-
-**Импульсное воздействие:**
-
-![Model 3.10 impulse](out_model310_impulse.png)
-
-**Гармоническое воздействие:**
-
-![Model 3.10 harmonic](out_model310_harmonic.png)
-
 ## UML Диаграмма классов
 
 ```mermaid
@@ -213,3 +166,51 @@ classDiagram
     Runner --> IModel : owns
     Runner ..> ISignal : uses
     Runner ..> Trace : produces
+```
+
+## Результаты моделирования
+
+Все расчёты выполнены при $n = 20$ шагах и амплитуде входа $A = 1$.
+Параметры моделей — значения по умолчанию.
+
+### 1. Model 1.6 — линейная модель третьего порядка
+
+**Ступенчатое воздействие** ($u_\tau = 1$):
+
+![Model 1.6 step](out_model16_step.png)
+
+**Импульсное воздействие** ($u_0 = 1$, $u_{\tau>0} = 0$):
+
+![Model 1.6 impulse](out_model16_impulse.png)
+
+**Гармоническое воздействие** ($u_\tau = \sin\tau$):
+
+![Model 1.6 harmonic](out_model16_harmonic.png)
+
+### 2. Model 2.8 — нелинейная модель с логистическим отображением
+
+**Ступенчатое воздействие:**
+
+![Model 2.8 step](out_model28_step.png)
+
+**Импульсное воздействие:**
+
+![Model 2.8 impulse](out_model28_impulse.png)
+
+**Гармоническое воздействие:**
+
+![Model 2.8 harmonic](out_model28_harmonic.png)
+
+### 3. Model 3.10 — дифференциальное уравнение (метод Эйлера)
+
+**Ступенчатое воздействие:**
+
+![Model 3.10 step](out_model310_step.png)
+
+**Импульсное воздействие:**
+
+![Model 3.10 impulse](out_model310_impulse.png)
+
+**Гармоническое воздействие:**
+
+![Model 3.10 harmonic](out_model310_harmonic.png)
