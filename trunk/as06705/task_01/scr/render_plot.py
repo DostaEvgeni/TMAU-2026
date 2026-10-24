@@ -2,73 +2,119 @@ import sys
 import os
 import csv
 
-if len(sys.argv) < 2:
-    print("Usage: python render_plot.py <file.csv>")
-    sys.exit(1)
 
-fname = sys.argv[1]
+def safe_filename(name: str) -> str:
 
-if not os.path.exists(fname):
-    print(f"File not found: {fname}")
-    print(f"cwd = {os.getcwd()}")
-    sys.exit(1)
+    if not name:
+        return ""
+    if name in (".", ".."):
+        return ""
+    if name.startswith("."):
+        return ""
+    if "/" in name or "\\" in name:
+        return ""
+    for ch in name:
+        if not (ch.isalnum() or ch in "._-"):
+            return ""
+    if not name.lower().endswith(".csv"):
+        return ""
+    return name
 
-try:
-    import matplotlib
-    matplotlib.use("Agg")
-    import matplotlib.pyplot as plt
-except ImportError:
-    print("matplotlib not installed. Run: py -3 -m pip install matplotlib")
-    sys.exit(1)
 
-tau, u, y = [], [], []
-with open(fname, newline="", encoding="utf-8") as f:
-    reader = csv.DictReader(f)
-    for row in reader:
-        tau.append(int(row["tau"]))
-        u.append(float(row["u"]))
-        y.append(float(row["y"]))
+def resolve_in_cwd(fname: str) -> str:
+    cwd = os.path.realpath(os.getcwd())
+    full = os.path.realpath(os.path.join(cwd, fname))
+    if full != cwd and not full.startswith(cwd + os.sep):
+        return ""
+    return full
 
-fig, ax = plt.subplots(figsize=(10, 5))
-ax.plot(tau, y, "b-o", markersize=3, linewidth=1.5, label="y(tau)")
-ax.set_xlabel("tau")
-ax.set_ylabel("y", color="b")
-ax.tick_params(axis="y", labelcolor="b")
-ax.grid(True, alpha=0.3)
-ax.set_title(os.path.basename(fname))
 
-ax2 = ax.twinx()
-ax2.plot(tau, u, "r--", linewidth=1.2, label="u(tau)")
-ax2.set_ylabel("u", color="r")
-ax2.tick_params(axis="y", labelcolor="r")
+def main(argv) -> int:
+    if len(argv) < 2:
+        print("Usage: python render_plot.py <file.csv>")
+        return 1
 
-plt.tight_layout()
+    raw = argv[1]
+    fname = safe_filename(raw)
+    if not fname:
+        print(f"Invalid filename: {raw!r}")
+        print("Expected a plain *.csv file name in the current directory.")
+        return 1
 
-base_png = fname.replace(".csv", ".png")
-out_png = base_png
+    full_csv = resolve_in_cwd(fname)
+    if not full_csv:
+        print(f"Path escapes working directory: {raw!r}")
+        return 1
 
-try:
-    plt.savefig(out_png, dpi=150)
-except PermissionError:
-    stem, ext = os.path.splitext(base_png)
-    for i in range(1, 100):
-        candidate = f"{stem}_{i}{ext}"
-        try:
-            plt.savefig(candidate, dpi=150)
-            out_png = candidate
-            break
-        except PermissionError:
-            continue
-    else:
-        print(f"Cannot save PNG next to {base_png}")
-        plt.close()
-        sys.exit(1)
+    if not os.path.exists(full_csv):
+        print(f"File not found: {fname}")
+        print(f"cwd = {os.path.realpath(os.getcwd())}")
+        return 1
 
-plt.close()
+    try:
+        import matplotlib
+        matplotlib.use("Agg")
+        import matplotlib.pyplot as plt
+    except ImportError:
+        print("matplotlib not installed. Run: py -3 -m pip install matplotlib")
+        return 1
 
-abs_png = os.path.abspath(out_png)
-print(f"Saved: {abs_png}")
+    tau, u, y = [], [], []
+    with open(full_csv, newline="", encoding="utf-8") as f:
+        reader = csv.DictReader(f)
+        for row in reader:
+            tau.append(int(row["tau"]))
+            u.append(float(row["u"]))
+            y.append(float(row["y"]))
 
-if not os.path.exists(abs_png):
-    print("ERROR: file was not created")
-    sys.exit(1)
+    fig, ax = plt.subplots(figsize=(10, 5))
+    ax.plot(tau, y, "b-o", markersize=3, linewidth=1.5, label="y(tau)")
+    ax.set_xlabel("tau")
+    ax.set_ylabel("y", color="b")
+    ax.tick_params(axis="y", labelcolor="b")
+    ax.grid(True, alpha=0.3)
+    ax.set_title(fname)
+
+    ax2 = ax.twinx()
+    ax2.plot(tau, u, "r--", linewidth=1.2, label="u(tau)")
+    ax2.set_ylabel("u", color="r")
+    ax2.tick_params(axis="y", labelcolor="r")
+
+    plt.tight_layout()
+
+    base_png = fname.replace(".csv", ".png")
+    out_png = base_png
+
+    try:
+        plt.savefig(out_png, dpi=150)
+    except PermissionError:
+        stem, ext = os.path.splitext(base_png)
+        saved = False
+        for i in range(1, 100):
+            candidate = f"{stem}_{i}{ext}"
+            try:
+                plt.savefig(candidate, dpi=150)
+                out_png = candidate
+                saved = True
+                break
+            except PermissionError:
+                continue
+        if not saved:
+            print(f"Cannot save PNG next to {base_png}")
+            plt.close()
+            return 1
+
+    plt.close()
+
+    abs_png = os.path.abspath(out_png)
+    print(f"Saved: {abs_png}")
+
+    if not os.path.exists(abs_png):
+        print("ERROR: file was not created")
+        return 1
+
+    return 0
+
+
+if __name__ == "__main__":
+    sys.exit(main(sys.argv))
